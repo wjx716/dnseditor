@@ -1,0 +1,169 @@
+/* Globals */
+html { min-width: 600px; }
+body, div, td, th { 
+    font-family: Arial, Verdana, Helvetica, sans-serif;
+	voice-family: "\"}\"";
+	voice-family: inherit;
+	color: #333;
+}  
+
+body {
+	background: #fff;
+	background-attachment: fixed;
+	color: #333;
+	padding: 0px;
+	margin: 0px;
+}
+* {
+    -moz-box-sizing: border-box;
+} 
+/* General */
+.add {
+	cursor: pointer;
+	cursor: hand;
+	vertical-align: middle;
+}
+.del {
+	cursor: pointer;
+	cursor: hand;
+	vertical-align: middle;
+}
+.dynaInput {
+	border: none;
+	background: #ffc;
+	width: 99%;
+}
+.update {
+  font-weight: bold;
+  color: #660000;
+}
+
+.cmdBtn {
+	width: 75px;
+	cursor: pointer;
+	cursor: hand;
+	color:#050;
+	font-family: sans-serif;
+	font-weight: bold;
+	font-size: 9px;
+	background-color:#FfEeDd;
+	border:1px solid;
+	border-top-color:#696;
+	border-left-color:#696;
+	border-right-color:#363;
+	border-bottom-color:#363;
+	filter:progid:DXImageTransform.Microsoft.Gradient
+		(GradientType=0,StartColorStr='#ffffffff',EndColorStr='#ffeeddaa');
+}
+/* Zones Menu */
+#zonelist {
+	border: 1px solid #ccc;
+	padding: 10px;
+	background: #f3f3f3;
+	margin-top: 10px;
+	margin-left: 10px;
+	height: 550px;
+	width: 250px;
+	float: left;
+	position:relative;
+}
+#zonelist_top {
+	height: 30px;
+	margin-top: 0px;
+}
+#zonelist_menu {
+	margin-top: 5px;
+	height: 400px;
+	width: 230px;
+	overflow: scroll;
+	border: 1px solid grey;
+}
+.zonemenu_filterable td {
+	padding: 0 0.5em;
+	background: #e3e3e3;
+}
+.zonemenu_filterable td.point {
+	cursor: pointer;
+	cursor: hand;
+	background: #fff;
+	width: 100%;
+}
+.zonemenu_filterable td.point_del {
+	background: #e3e3e3;
+	width: 16px;
+}
+/* status */
+#status_div {
+	margin-top: 5px;
+	padding: 2px;
+	height: 70px;
+	width: 230px;
+	overflow: none;
+	border: 1px solid grey;
+	font-family: sans-serif;
+	font-size: 10px;
+}
+
+/* Zone Editor */
+#zone_edit_msg {
+	height: 100px;
+	width: 100%;
+	text-align: center;
+	margin-top:250px;
+	margin-left: auto;
+	margin-right: auto;
+}
+#zoneinfo {
+	border: 1px solid #ccc;
+	padding: 10px;
+	background: #f3f3f3;
+	margin-top: 10px;
+	height: 550px;
+	width: 550px;
+	float: left;
+	position:relative;
+}
+
+.editable_table {
+	font: 11px/22px Verdana, Arial, Helvetica, sans-serif;
+
+}
+.editable_table div {
+		overflow: hidden;
+		clip: auto;
+		width: 98%;
+		height: 98%;
+		white-space: nowrap;
+		/*background-color: #CCC;*/
+}
+.editable_table th {
+	padding: 0 0.5em;
+	text-align: left;	
+}
+
+.editable_table tr.yellow td {
+	font: 12px/24px Verdana, Arial, Helvetica, sans-serif;
+	border: 1px solid #009900;
+	background: #DFFFDF;
+
+}
+
+.editable_table td.point {
+	cursor: pointer;
+	cursor: hand;
+	background: #fff;
+	width: 150px;
+}
+.editable_table td.point_small {
+	cursor: pointer;
+	cursor: hand;
+	background: #fff;
+	width: 50px;
+}
+.editable_table td.row_head {
+	width: 60px;
+}
+.editable_table td {
+	padding: 0 0.5em;
+	background: #e3e3e3;
+}
