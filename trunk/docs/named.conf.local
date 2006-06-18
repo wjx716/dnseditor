@@ -1,0 +1,8 @@
+dlz "Mysql zone" {
+   database "mysql
+   {host=127.0.0.1 port=3306 dbname=dns user=dns pass=dns ssl=false}
+   {select zone from dns_records where zone = '%zone%'}
+   {select ttl, type, mx_priority, case when lower(type)='txt' then concat('\"', data, '\"')
+        when lower(type) = 'soa' then concat_ws(' ', data, resp_person, serial,refresh, retry, expire, minimum)
+        else data end from dns_records where zone = '%zone%' and host = '%record%'}";
+}; 
