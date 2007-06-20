@@ -20,7 +20,6 @@ function updateServers() {
 	}
 	$r_text = implode("\r\n",$r_array);
 	$newText = "Servers Updated:\r\n" . $r_text . '~~|~~' . $errText;
-	$newText = '~~|~~' . $errText;
 	return $newText;
 }
 
