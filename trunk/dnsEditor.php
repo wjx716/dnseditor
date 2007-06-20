@@ -1,11 +1,15 @@
 <?php
-// your primary nameserver
-$primary_ns = 'ns1.ifpdx.com.';
+include 'config.php';
+
+ini_set('log_errors', $cfg_log_errors);
+$primary_ns = $cfg_primary_ns;
 
 // Begin session
 session_start();
 // DB connection
-mysql_select_db('dns_sample', mysql_connect('localhost', 'sample', 'sample')) or die (mysql_error());
+mysql_select_db($cfg_db_name, mysql_connect($cfg_db_host, $cfg_db_user, $cfg_db_pass)) or die (mysql_error());
+
+// This calls a shell script.  Eventually we may want to have it perform some other forms of updating
 function updateServers() {
 	$err = 0;
 	$r = exec("./dns_update.forbidden",$r_array,$r_code);
@@ -19,6 +23,7 @@ function updateServers() {
 	$newText = '~~|~~' . $errText;
 	return $newText;
 }
+
 function ToDBString($string, $isNumber=false) {
 	if($isNumber) {
 		if(preg_match("/^\d*[\.\,\']\d+|\d+[\.\,\']|\d+$/A", $string))
@@ -26,7 +31,7 @@ function ToDBString($string, $isNumber=false) {
 		else
 			die("~~|~~~~|~~String validation error: Not a number: \"".$string ."\"");
 	} else {
-		return "'".mysql_real_escape_string(trim($string))."'";
+		return "'".mysql_real_escape_string(trim(strtolower($string)))."'";
 	}
 }
 // Main function to update table information
@@ -41,7 +46,7 @@ function updateSerial($rid) {
 	$row = mysql_fetch_row($sql);
 	$zone = $row[0];
 	if ($zone) {
-		$m_sql = "UPDATE dns_records SET serial = " . date("U") . " WHERE zone='$zone' AND UCASE(type)='SOA';";
+		$m_sql = "UPDATE dns_records SET serial = " . date("YmdU") . " WHERE zone='$zone' AND type='SOA';";
 		$sql = @mysql_query($m_sql);
 		$err = mysql_errno();
 		if ($err != 0) {
@@ -96,7 +101,7 @@ function addRecord($sValue) {
 	if (isValidType($rtype)) {
 		switch ($rtype) {
 			case "A":
-				$sql_string = "INSERT INTO dns_records (zone,type) VALUES (".ToDBString($zone) . "," . ToDBString($rtype) . ");";
+				$sql_string = "INSERT INTO dns_records (zone,type) VALUES (".ToDBString($zone) . ",UCASE(" . ToDBString($rtype) . "));";
 				if (zoneExists($zone)) {
 					$sql = @mysql_query($sql_string);
 					$err = mysql_errno();
@@ -105,7 +110,7 @@ function addRecord($sValue) {
 				}
 				break;
 			case "SOA":
-				$sql_string = "INSERT INTO dns_records (zone,host,type,data,ttl,refresh,retry,expire,minimum,serial,resp_person,primary_ns) VALUES (".ToDBString($zone) . ",'@'," . ToDBString($rtype) . ",'".$primary_ns."',86400,7200,3600,604800,3600,".date("YmdU").",'hostmaster.somewhere.com.','".$primary_ns."');";
+				$sql_string = "INSERT INTO dns_records (zone,host,type,data,ttl,refresh,retry,expire,minimum,serial,resp_person) VALUES (".ToDBString($zone) . ",'@',UCASE(" . ToDBString($rtype) . "),'".$primary_ns."',86400,7200,3600,604800,3600,".date("YmdU").",'hostmaster');";
 				if (!zoneExists($zone)) {
 					$sql = @mysql_query($sql_string);
 					$err = mysql_errno();
@@ -114,7 +119,7 @@ function addRecord($sValue) {
 				}
 				break;
 			default:
-				$sql_string = "INSERT INTO dns_records (zone,host,type) VALUES (".ToDBString($zone) . ",'@'," . ToDBString($rtype) . ");";
+				$sql_string = "INSERT INTO dns_records (zone,host,type) VALUES (".ToDBString($zone) . ",'@',UCASE(" . ToDBString($rtype) . "));";
 				if (zoneExists($zone)) {
 					$sql = @mysql_query($sql_string);
 					$err = mysql_errno();
@@ -143,6 +148,12 @@ function addRecord($sValue) {
 			break;
 		case "SOA":
 			$typehtml = getSOARecord($zone);
+			break;
+		case 'CNAME':
+			$typehtml = getCNAMERecords($zone);
+			break;
+		case 'TXT':
+			$typehtml = getTXTRecords($zone);
 			break;
 	}
 	$newtext = $rtype . '~~|~~' . $typehtml . '~~|~~' . $errText;
@@ -198,6 +209,12 @@ function delRecord($sValue) {
 		case "SOA":
 			$typehtml = getSOARecord($zone);
 			break;
+		case 'CNAME':
+			$typehtml = getCNAMERecords($zone);
+			break;
+		case 'TXT':
+			$typehtml = getTXTRecords($zone);
+			break;
 	}
 	$newtext = $rtype . '~~|~~' . $typehtml . '~~|~~' . $errText;
 	return $newtext;
@@ -217,6 +234,7 @@ function isValidType($rtype) {
 		case "SOA":
 		case "A":
 		case "TXT":
+		case 'CNAME':
 			return 1;
 			break;
 		default:
@@ -241,6 +259,8 @@ function getZone($zone) {
 			$html .= "<div id=\"div_ns_records\">" . getNSRecords($zone) . "</div>";
 			$html .= "<div id=\"div_mx_records\">" . getMXRecords($zone) . "</div>";
 			$html .= "<div id=\"div_a_records\">" . getARecords($zone) . "</div>";
+			$html .= '<div id="div_cname_records">' . getCNAMERecords($zone) . '</div>';
+			$html .= '<div id="div_txt_records">' . getTXTRecords($zone) . '</div>';
 		} else {
 			$html .= "<h2>Zone [$zone] does not exist.</h2>";	
 		}
@@ -309,6 +329,57 @@ function getARecords($zone) {
     $table .= "</table>\n";
     return $table;
 }
+function getCNAMERecords($zone) {
+	// the TR string
+	$table = "";
+	// query DB
+	$sql = @mysql_query("SELECT rid,host,data FROM dns_records WHERE type='CNAME' AND zone=".ToDBString($zone)." ORDER BY host");
+	// build table
+	$table .= "<table id=\"tbl_cname_records\" class=\"editable_table\">";
+	$table .= "<tr class=\"yellow\">\n";
+	$table .= "<td class=\"row_head\"><strong><span class=\"add\" onclick=\"addRecord('$zone', 'CNAME');\" onmouseover=\"bgSwitch('on', this, 'Add CNAME Record');\" onmouseout=\"bgSwitch('off', this, '');\"\"><img src=\"add.png\" border=0 alt=\"Add Record\" /></span> CNAME</strong></td>\n";
+	$table .= "<td>Name</td>\n";
+	$table .= "<td>Canonical Name</td>\n";
+	$table .= "</tr>\n";
+	while($row = mysql_fetch_array($sql)){
+		stripslashes(extract($row));
+		$table .=	"<tr>\n<td class=\"row_head\" align=\"right\"><span class=\"del\" onclick=\"delRecord('$zone', 'A', $rid);\"><img src=\"delete.png\" border=0 alt=\"Delete Record\" /></span></td>\n";
+		$table .= "<td class=\"point\" id=\"".$rid."__host\" onmouseover=\"bgSwitch('on', this, 'Modify Address Record Host');\" onmouseout=\"bgSwitch('off', this);\">\n";
+		$table .= "<div onclick=\"editCell('".$rid."__host', this);\">".$host."</div>\n";
+		$table .= "</td>\n";
+		$table .= "<td class=\"point\" id=\"".$rid."__data\" onmouseover=\"bgSwitch('on', this, 'Modify Address Record IP');\" onmouseout=\"bgSwitch('off', this);\">\n";
+		$table .=	"<div onclick=\"editCell('".$rid."__data', this);\">".$data."</div>\n";
+		$table .= "</td>\n</tr>\n";
+    }
+    $table .= "</table>\n";
+    return $table;
+}
+function getTXTRecords($zone) {
+	// the TR string
+	$table = "";
+	// query DB
+	$sql = @mysql_query("SELECT rid,host,data FROM dns_records WHERE type='TXT' AND zone=".ToDBString($zone)." ORDER BY host");
+	// build table
+	$table .= "<table id=\"tbl_txt_records\" class=\"editable_table\">";
+	$table .= "<tr class=\"yellow\">\n";
+	$table .= "<td class=\"row_head\"><strong><span class=\"add\" onclick=\"addRecord('$zone', 'TXT');\" onmouseover=\"bgSwitch('on', this, 'Add TXT Record');\" onmouseout=\"bgSwitch('off', this, '');\"\"><img src=\"add.png\" border=0 alt=\"Add Record\" /></span> TXT</strong></td>\n";
+	$table .= "<td>Name</td>\n";
+	$table .= "<td>Text</td>\n";
+	$table .= "</tr>\n";
+	while($row = mysql_fetch_array($sql)){
+		stripslashes(extract($row));
+		$table .=	"<tr>\n<td class=\"row_head\" align=\"right\"><span class=\"del\" onclick=\"delRecord('$zone', 'A', $rid);\"><img src=\"delete.png\" border=0 alt=\"Delete Record\" /></span></td>\n";
+		$table .= "<td class=\"point\" id=\"".$rid."__host\" onmouseover=\"bgSwitch('on', this, 'Modify Address Record Host');\" onmouseout=\"bgSwitch('off', this);\">\n";
+		$table .= "<div onclick=\"editCell('".$rid."__host', this);\">".$host."</div>\n";
+		$table .= "</td>\n";
+		$table .= "<td class=\"point\" id=\"".$rid."__data\" onmouseover=\"bgSwitch('on', this, 'Modify Address Record IP');\" onmouseout=\"bgSwitch('off', this);\">\n";
+		$table .=	"<div onclick=\"editCell('".$rid."__data', this);\">".$data."</div>\n";
+		$table .= "</td>\n</tr>\n";
+    }
+    $table .= "</table>\n";
+    return $table;
+}
+
 function getMXRecords($zone) {
 	// the TR string
 	$table = "";
@@ -359,7 +430,9 @@ function getZoneList() {
 	// the TR string
 	$table = "";
 	// query DB
-	$sql = @mysql_query("SELECT DISTINCT zone,rid FROM dns_records WHERE type='SOA' order by zone asc");
+	$sql = mysql_query("SELECT DISTINCT zone,rid FROM dns_records WHERE type='SOA' order by zone asc");
+	if(!$sql)
+		echo mysql_error();
 	// build table
 	while($row = mysql_fetch_array($sql)){
 		stripslashes(extract($row));
@@ -453,6 +526,15 @@ sajax_handle_client_request();
 				case "A":
 					document.getElementById('div_a_records').innerHTML = result_array[1];
 					break;
+				case 'CNAME':
+					document.getElementById('div_cname_records').innerHTML = result_array[1];
+					break;
+				case 'TXT':
+					document.getElementById('div_txt_records').innerHTML = result_array[1];
+					break;
+				case 'SOA':
+					refreshZones();
+					break;
 			}
 		}
 		function delZone_cb(result) {
@@ -476,6 +558,12 @@ sajax_handle_client_request();
 					break;
 				case "A":
 					document.getElementById('div_a_records').innerHTML = result_array[1];
+					break;
+				case 'CNAME':
+					document.getElementById('div_cname_records').innerHTML = result_array[1];
+					break;
+				case 'TXT':
+					document.getElementById('div_txt_records').innerHTML = result_array[1];
 					break;
 				case "SOA":
 					refreshZones();
