@@ -45,7 +45,7 @@ function updateSerial($rid) {
 	$row = mysql_fetch_row($sql);
 	$zone = $row[0];
 	if ($zone) {
-		$m_sql = "UPDATE dns_records SET serial = " . date("YmdU") . " WHERE zone='$zone' AND type='SOA';";
+		$m_sql = "UPDATE dns_records SET serial = " . date("U") . " WHERE zone='$zone' AND type='SOA';";
 		$sql = @mysql_query($m_sql);
 		$err = mysql_errno();
 		if ($err != 0) {
@@ -342,7 +342,7 @@ function getCNAMERecords($zone) {
 	$table .= "</tr>\n";
 	while($row = mysql_fetch_array($sql)){
 		stripslashes(extract($row));
-		$table .=	"<tr>\n<td class=\"row_head\" align=\"right\"><span class=\"del\" onclick=\"delRecord('$zone', 'A', $rid);\"><img src=\"delete.png\" border=0 alt=\"Delete Record\" /></span></td>\n";
+		$table .=	"<tr>\n<td class=\"row_head\" align=\"right\"><span class=\"del\" onclick=\"delRecord('$zone', 'CNAME', $rid);\"><img src=\"delete.png\" border=0 alt=\"Delete Record\" /></span></td>\n";
 		$table .= "<td class=\"point\" id=\"".$rid."__host\" onmouseover=\"bgSwitch('on', this, 'Modify Address Record Host');\" onmouseout=\"bgSwitch('off', this);\">\n";
 		$table .= "<div onclick=\"editCell('".$rid."__host', this);\">".$host."</div>\n";
 		$table .= "</td>\n";
@@ -367,7 +367,7 @@ function getTXTRecords($zone) {
 	$table .= "</tr>\n";
 	while($row = mysql_fetch_array($sql)){
 		stripslashes(extract($row));
-		$table .=	"<tr>\n<td class=\"row_head\" align=\"right\"><span class=\"del\" onclick=\"delRecord('$zone', 'A', $rid);\"><img src=\"delete.png\" border=0 alt=\"Delete Record\" /></span></td>\n";
+		$table .=	"<tr>\n<td class=\"row_head\" align=\"right\"><span class=\"del\" onclick=\"delRecord('$zone', 'TXT', $rid);\"><img src=\"delete.png\" border=0 alt=\"Delete Record\" /></span></td>\n";
 		$table .= "<td class=\"point\" id=\"".$rid."__host\" onmouseover=\"bgSwitch('on', this, 'Modify Address Record Host');\" onmouseout=\"bgSwitch('off', this);\">\n";
 		$table .= "<div onclick=\"editCell('".$rid."__host', this);\">".$host."</div>\n";
 		$table .= "</td>\n";

@@ -1,13 +1,12 @@
 #!/bin/sh
-# This is a simple script to push changes to remote mysql servers - ugly, ugly, ugly
-#
+
 TMPFILE=/tmp/mysql-sync-temp.`date +%Y%m%d%H%M%S%N`.sql
-NS1=server1
-NS2=server2
-NS3=server3
+NS1=10.10.99.92
+NS2=10.10.99.70
+NS3=10.10.1.91
 RTN=0
 # dump records
-mysqldump --opt -u dns --password=dns_pass dns> $TMPFILE
+mysqldump --opt -u root --password=dns_r00t dns> $TMPFILE
 if [ "${?}" = 0 ]; then
 	echo "Dumping Records: Finished."
 else
@@ -16,7 +15,7 @@ else
 	exit 1
 fi
 #update ns1
-mysql --host=$NS1 --connect_timeout=3 -u dns --password=dns_pass dns< $TMPFILE
+mysql --host=$NS1 --connect_timeout=3 -u named --password=n4m3d dns< $TMPFILE
 if [ "${?}" = 0 ]; then
 	echo "Exporting Records to NS1: Finished."
 else
@@ -24,7 +23,7 @@ else
 	RTN=1
 fi
 #update ns2
-mysql --host=$NS2 --connect_timeout=3 -u dns --password=dns_pass dns< $TMPFILE
+mysql --host=$NS2 --connect_timeout=3 -u named --password=n4m3d dns< $TMPFILE
 if [ "${?}" = 0 ]; then
         echo "Exporting Records to NS2: Finished."      
 else
@@ -32,7 +31,7 @@ else
 	RTN=1
 fi 
 #update ns3
-mysql --host=$NS3 --connect_timeout=3 -u dns --password=dns_pass dns< $TMPFILE
+mysql --host=$NS3 --connect_timeout=3 -u named --password=n4m3d dns< $TMPFILE
 if [ "${?}" = 0 ]; then
         echo "Exporting Records to NS3: Finished."      
 else
