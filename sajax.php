@@ -64,6 +64,7 @@ if (!isset($SAJAX_INCLUDED)) {
 			echo "-:$func_name not callable";
 		else {
 			echo "+:";
+			//sleep(5);
 			$result = call_user_func_array($func_name, $args);
 			echo $result;
 		}
