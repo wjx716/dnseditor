@@ -594,6 +594,7 @@ sajax_handle_client_request();
     <?
       sajax_show_javascript();
     ?>
+    var UPDATE_STR = "<img src=\"loadersmall.gif\"/> Updating...";
     function trim(str) {
       str = " " + str + " ";
       return str.replace(/^\s+/g, '').replace(/\s+$/g, '');
@@ -837,11 +838,11 @@ sajax_handle_client_request();
             <td align="right">
 	      <img src="loader.gif" style="display:none" id="addloader"/>
 	      <input type="button" class="cmdBtn" id="addbtn" value="Add Zone" onClick="javascript:addZone();" onmouseover="bgSwitch('on', this, 'Add a new Zone');" onmouseout="bgSwitch('off', this, '');"/>
-          <?
+<?
           if (@$cfg_updateservers)
           {
-          ?>
-            <br><input class="cmdBtn" type="button" value="Update Servers" name="btn_updateServers" id="btn_updateServers" onclick="javascript:this.value='<img src=\"loadersmall.gif\"/> Updating...';x_updateServers('',updateServers_cb);" onmouseover="bgSwitch('on', this, 'Syncronize all DNS Servers');" onmouseout="bgSwitch('off', this, '');" />
+?>
+              <br/><input class="cmdBtn" type="button" value="Update Servers" name="btn_updateServers" id="btn_updateServers" onclick="javascript:this.value='Updating...';x_updateServers('',updateServers_cb);" onmouseover="bgSwitch('on', this, 'Syncronize all DNS Servers');" onmouseout="bgSwitch('off', this, '');" />
           <?
           }
           ?>
