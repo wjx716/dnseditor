@@ -1,0 +1,1 @@
+This simple project lets you have an easy to use web frontend for nameserver management
